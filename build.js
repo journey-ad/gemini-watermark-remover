@@ -30,16 +30,13 @@ const userscriptBanner = `// ==UserScript==
 // @name         Gemini NanoBanana Watermark Remover
 // @name:zh-CN   Gemini NanoBanana 图片水印移除
 // @namespace    https://github.com/journey-ad
-// @version      0.1.4
+// @version      0.1.5
 // @description  Automatically removes watermarks from Gemini AI generated images
 // @description:zh-CN 自动移除 Gemini AI 生成图像中的水印
 // @icon         https://www.google.com/s2/favicons?domain=gemini.google.com
 // @author       journey-ad
 // @license      MIT
-// @match        https://gemini.google.com/app
-// @match        https://gemini.google.com/app/*
-// @match        https://gemini.google.com/u/*/app
-// @match        https://gemini.google.com/u/*/app/*
+// @match        https://gemini.google.com/*
 // @grant        GM_xmlhttpRequest
 // @run-at       document-end
 // ==/UserScript==
