@@ -40,7 +40,7 @@
   "info.position": "Position",
   "info.status": "Status",
   "info.removed": "Watermark Removed",
-  "original.not_gemini": "⚠️ Image may not be made with Gemini. Lossless restoration unavailable.",
-  "original.not_original": "⚠️ Image may not be original size. Lossless restoration unavailable.",
-  "original.pass": "✅ Image made with Gemini. Lossless restoration supported."
+  "original.not_gemini": "⚠️ This image may not be made with Gemini. Lossless processing unavailable.",
+  "original.not_original": "⚠️ This image may not be original size. Lossless processing unavailable.",
+  "original.pass": "✅ This image made with Gemini. Lossless processing supported."
 }

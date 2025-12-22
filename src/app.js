@@ -1,12 +1,14 @@
 import { WatermarkEngine } from './core/watermarkEngine.js';
 import i18n from './i18n.js';
+import { loadImage, checkOriginal, getOriginalStatus, setStatusMessage, showLoading, hideLoading } from './utils.js';
 import JSZip from 'jszip';
-import exifr from 'exifr';
+import mediumZoom from 'medium-zoom';
 
 // global state
 let engine = null;
 let imageQueue = [];
 let processedCount = 0;
+let zoom = null;
 
 // dom elements references
 const uploadArea = document.getElementById('uploadArea');
@@ -16,15 +18,13 @@ const multiPreview = document.getElementById('multiPreview');
 const imageList = document.getElementById('imageList');
 const progressText = document.getElementById('progressText');
 const downloadAllBtn = document.getElementById('downloadAllBtn');
-const loadingOverlay = document.getElementById('loadingOverlay');
-const originalCanvas = document.getElementById('originalCanvas');
+const originalImage = document.getElementById('originalImage');
 const processedSection = document.getElementById('processedSection');
 const processedImage = document.getElementById('processedImage');
 const originalInfo = document.getElementById('originalInfo');
 const processedInfo = document.getElementById('processedInfo');
 const downloadBtn = document.getElementById('downloadBtn');
 const resetBtn = document.getElementById('resetBtn');
-const statusMessage = document.getElementById('statusMessage');
 
 /**
  * initialize the application
@@ -39,6 +39,12 @@ async function init() {
 
         hideLoading();
         setupEventListeners();
+
+        zoom = mediumZoom('[data-zoomable]', {
+            margin: 24,
+            scrollOffset: 0,
+            background: 'rgba(255, 255, 255, .6)',
+        })
     } catch (error) {
         hideLoading();
         console.error('初始化错误：', error);
@@ -93,26 +99,6 @@ function reset() {
     fileInput.value = '';
 }
 
-async function checkOriginal(file) {
-    try {
-        const exif = await exifr.parse(file, { xmp: true });
-        return {
-            is_google: exif?.Credit === 'Made with Google AI',
-            is_original: ['ImageWidth', 'ImageHeight'].every(key => exif?.[key])
-        }
-    } catch {
-        return { is_google: false, is_original: false };
-    }
-}
-
-function setStatusMessage(message = '', type = '') {
-    statusMessage.textContent = message;
-    statusMessage.style.display = message ? 'block' : 'none';
-    const colorMap = { warn: 'text-warn', success: 'text-success' };
-    statusMessage.classList.remove(...Object.values(colorMap));
-    if (colorMap[type]) statusMessage.classList.add(colorMap[type]);
-}
-
 function handleFileSelect(e) {
     handleFiles(Array.from(e.target.files));
 }
@@ -152,12 +138,6 @@ function handleFiles(files) {
     }
 }
 
-function getOriginalStatus({ is_google, is_original }) {
-    if (!is_google) return i18n.t('original.not_gemini');
-    if (!is_original) return i18n.t('original.not_original');
-    return '';
-}
-
 async function processSingle(item) {
     try {
         const img = await loadImage(item.file);
@@ -167,15 +147,13 @@ async function processSingle(item) {
         const status = getOriginalStatus({ is_google, is_original });
         setStatusMessage(status, is_google && is_original ? 'success' : 'warn');
 
-        originalCanvas.width = img.width;
-        originalCanvas.height = img.height;
-        originalCanvas.getContext('2d').drawImage(img, 0, 0);
+        originalImage.src = img.src;
 
         const watermarkInfo = engine.getWatermarkInfo(img.width, img.height);
         originalInfo.innerHTML = `
-            <strong>${i18n.t('info.size')}：</strong>${img.width} × ${img.height} px<br>
-            <strong>${i18n.t('info.watermark')}：</strong>${watermarkInfo.size}×${watermarkInfo.size} px<br>
-            <strong>${i18n.t('info.position')}：</strong>(${watermarkInfo.position.x}, ${watermarkInfo.position.y})
+            <p>${i18n.t('info.size')}: ${img.width}×${img.height}</p>
+            <p>${i18n.t('info.watermark')}: ${watermarkInfo.size}×${watermarkInfo.size}</p>
+            <p>${i18n.t('info.position')}: (${watermarkInfo.position.x},${watermarkInfo.position.y})</p>
         `;
 
         const result = await engine.removeWatermarkFromImage(img);
@@ -188,9 +166,12 @@ async function processSingle(item) {
         downloadBtn.onclick = () => downloadImage(item);
 
         processedInfo.innerHTML = `
-            <strong>${i18n.t('info.size')}：</strong>${img.width} × ${img.height} px<br>
-            <strong>${i18n.t('info.status')}：</strong>${i18n.t('info.removed')}
+            <p>${i18n.t('info.size')}: ${img.width}×${img.height}</p>
+            <p>${i18n.t('info.status')}: ${i18n.t('info.removed')}</p>
         `;
+
+        zoom.detach();
+        zoom.attach('[data-zoomable]');
 
         processedSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (error) {
@@ -206,7 +187,7 @@ function createImageCard(item) {
         <div class="flex flex-wrap h-full">
             <div class="w-full md:w-auto h-full flex border-b border-gray-100">
                 <div class="w-24 md:w-48 flex-shrink-0 bg-gray-50 p-2 flex items-center justify-center">
-                    <img id="result-${item.id}" class="max-w-full max-h-24 md:max-h-full rounded"></img>
+                    <img id="result-${item.id}" class="max-w-full max-h-24 md:max-h-full rounded" data-zoomable />
                 </div>
                 <div class="flex-1 p-4 flex flex-col min-w-0">
                     <h4 class="font-semibold text-sm text-gray-900 mb-2 truncate">${item.name}</h4>
@@ -226,6 +207,7 @@ async function processQueue() {
         const img = await loadImage(item.file);
         item.originalImg = img;
         document.getElementById(`result-${item.id}`).src = img.src;
+        zoom.attach(`#result-${item.id}`);
     }
 
     for (const item of imageQueue) {
@@ -246,10 +228,10 @@ async function processQueue() {
             const { is_google, is_original } = await checkOriginal(item.originalImg);
             const originalStatus = getOriginalStatus({ is_google, is_original });
 
-            updateStatus(item.id, `<strong>${i18n.t('info.size')}：</strong>${item.originalImg.width} × ${item.originalImg.height} px<br>
-            <strong>${i18n.t('info.watermark')}：</strong>${watermarkInfo.size}×${watermarkInfo.size} px<br>
-            <strong>${i18n.t('info.position')}：</strong>(${watermarkInfo.position.x}, ${watermarkInfo.position.y})<br>
-            <span class="mt-1 text-[10px] md:text-sm ${is_google && is_original ? 'hidden' : 'text-warn'}">${originalStatus}</span>`, true);
+            updateStatus(item.id, `<p>${i18n.t('info.size')}: ${item.originalImg.width}×${item.originalImg.height}</p>
+            <p>${i18n.t('info.watermark')}: ${watermarkInfo.size}×${watermarkInfo.size}</p>
+            <p>${i18n.t('info.position')}: (${watermarkInfo.position.x},${watermarkInfo.position.y})</p>
+            <p class="inline-block mt-1 text-xs md:text-sm ${is_google && is_original ? 'hidden' : 'text-warn'}">${originalStatus}</p>`, true);
 
             const downloadBtn = document.getElementById(`download-${item.id}`);
             downloadBtn.classList.remove('hidden');
@@ -267,20 +249,6 @@ async function processQueue() {
     if (processedCount > 0) {
         downloadAllBtn.style.display = 'flex';
     }
-}
-
-function loadImage(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = reject;
-            img.src = e.target.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
 }
 
 function updateStatus(id, text, isHtml = false) {
@@ -320,16 +288,6 @@ async function downloadAll() {
     a.href = URL.createObjectURL(blob);
     a.download = `unwatermarked_${Date.now()}.zip`;
     a.click();
-}
-
-function showLoading(text = null) {
-    loadingOverlay.style.display = 'flex';
-    const textEl = loadingOverlay.querySelector('p');
-    if (textEl && text) textEl.textContent = text;
-}
-
-function hideLoading() {
-    loadingOverlay.style.display = 'none';
 }
 
 init();

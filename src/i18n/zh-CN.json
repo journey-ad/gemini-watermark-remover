@@ -40,7 +40,7 @@
   "info.position": "位置",
   "info.status": "状态",
   "info.removed": "水印已移除",
-  "original.not_gemini": "⚠️ 此图片非 Gemini 生成的原图，可能无法无损还原",
-  "original.not_original": "⚠️ 此图片非 Gemini 生成的原始尺寸，可能无法无损还原",
-  "original.pass": "✅ 此图片为 Gemini 生成的原图，可进行无损还原"
+  "original.not_gemini": "⚠️ 此图片非 Gemini 生成的原始图片，可能无法进行无损去水印",
+  "original.not_original": "⚠️ 此图片非原始尺寸，可能无法进行无损去水印",
+  "original.pass": "✅ 此图片为 Gemini 生成的原始图片，可进行无损去水印"
 }
