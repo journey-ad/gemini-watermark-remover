@@ -8,9 +8,15 @@ importers:
 
   .:
     dependencies:
+      exifr:
+        specifier: ^7.1.3
+        version: 7.1.3
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
+      medium-zoom:
+        specifier: ^1.1.0
+        version: 1.1.0
     devDependencies:
       esbuild:
         specifier: ^0.24.0
@@ -176,6 +182,9 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  exifr@7.1.3:
+    resolution: {integrity: sha512-g/aje2noHivrRSLbAUtBPWFbxKdKhgj/xr1vATDdUXPOFYJlQ62Ft0oy+72V6XLIpDJfHs6gXLbBLAolqOXYRw==}
+
   immediate@3.0.6:
     resolution: {integrity: sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==}
 
@@ -190,6 +199,9 @@ packages:
 
   lie@3.3.0:
     resolution: {integrity: sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ==}
+
+  medium-zoom@1.1.0:
+    resolution: {integrity: sha512-ewyDsp7k4InCUp3jRmwHBRFGyjBimKps/AJLjRSox+2q/2H4p/PNpQf+pwONWlJiOudkBXtbdmVbFjqyybfTmQ==}
 
   pako@1.0.11:
     resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
@@ -319,6 +331,8 @@ snapshots:
       '@esbuild/win32-ia32': 0.24.2
       '@esbuild/win32-x64': 0.24.2
 
+  exifr@7.1.3: {}
+
   immediate@3.0.6: {}
 
   inherits@2.0.4: {}
@@ -335,6 +349,8 @@ snapshots:
   lie@3.3.0:
     dependencies:
       immediate: 3.0.6
+
+  medium-zoom@1.1.0: {}
 
   pako@1.0.11: {}
 

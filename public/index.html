@@ -19,6 +19,10 @@
             primary: '#10B981',
             'primary-hover': '#059669',
             dark: '#1F2937',
+            success: '#10B981',
+            warn: '#F59E0B',
+            err: '#EF4444',
+            info: '#3B82F6',
           },
           boxShadow: {
             'soft': '0 4px 20px -2px rgba(16, 185, 129, 0.1)',
@@ -65,6 +69,14 @@
     }
     body.loading { opacity: 0; }
     body { transition: opacity 0s; }
+
+    .medium-zoom-overlay,
+    .medium-zoom-image--opened {
+      z-index: 999;
+    }
+    .medium-zoom-overlay {
+      backdrop-filter: blur(4px);
+    }
   </style>
 </head>
 <body class="bg-white text-gray-800 antialiased selection:bg-primary selection:text-white flex flex-col min-h-screen loading">
@@ -103,7 +115,7 @@
         <div id="uploadArea" class="group relative flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-emerald-200 rounded-xl bg-emerald-50/30 hover:bg-emerald-50 hover:border-emerald-400 transition-all cursor-pointer">
           <div class="flex flex-col items-center justify-center pt-5 pb-6">
             <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-transform duration-300">
-              <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+              <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M 22.498 20.365 L 22.498 4.247 C 22.498 2.983 21.461 1.946 20.197 1.946 L 4.079 1.946 C 2.815 1.946 1.778 2.983 1.778 4.247 L 1.778 20.365 C 1.778 21.629 2.815 22.666 4.079 22.666 L 20.197 22.666 C 21.461 22.666 22.498 21.629 22.498 20.365 Z M 8.111 14.032 L 10.987 17.483 L 15.014 12.306 L 20.197 19.214 L 4.079 19.214 L 8.111 14.032 Z" fill="currentColor"></path></svg>
             </div>
             <p class="mb-2 text-lg font-medium text-gray-700" data-i18n="upload.text">点击选择 或 拖拽图片至此</p>
             <p class="text-sm text-gray-400" data-i18n="upload.hint">支持 JPG, PNG, WebP</p>
@@ -140,8 +152,8 @@
               </h3>
               <span id="originalInfo" class="text-xs text-gray-400 font-mono"></span>
             </div>
-            <div class="p-4 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2Y5ZmRmZCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZjJmMmYyIi8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNmMmYyZjIiLz48L3N2Zz4=')]">
-              <canvas id="originalCanvas" class="max-w-full h-auto mx-auto rounded-lg shadow-sm block"></canvas>
+            <div class="h-[200px] md:h-[500px] p-4 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2Y5ZmRmZCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZjJmMmYyIi8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNmMmYyZjIiLz48L3N2Zz4=')]">
+              <img id="originalImage" class="max-w-full max-h-full mx-auto rounded-lg shadow-sm block" data-zoomable />
             </div>
           </div>
 
@@ -152,8 +164,8 @@
               </h3>
               <span id="processedInfo" class="text-xs text-emerald-600 font-mono"></span>
             </div>
-            <div class="p-4 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2Y5ZmRmZCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZjJmMmYyIi8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNmMmYyZjIiLz48L3N2Zz4=')]">
-              <img id="processedImage" class="max-w-full h-auto mx-auto rounded-lg shadow-sm block" />
+            <div class="h-[200px] md:h-[500px] p-4 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2Y5ZmRmZCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZjJmMmYyIi8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNmMmYyZjIiLz48L3N2Zz4=')]">
+              <img id="processedImage" class="max-w-full max-h-full mx-auto rounded-lg shadow-sm block" data-zoomable />
             </div>
           </div>
         </div>
@@ -174,7 +186,7 @@
               </button>
             </div>
 
-            <div id="statusMessage" class="mt-6 text-sm text-center text-gray-500 min-h-[1.25rem]"></div>
+            <div id="statusMessage" class="mt-6 text-sm text-gray-500 min-h-[1.25rem]"></div>
           </div>
         </div>
       </div>
