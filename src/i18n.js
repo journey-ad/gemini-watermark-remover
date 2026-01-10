@@ -16,7 +16,11 @@ const i18n = {
   },
 
   t(key) {
-    return this.translations[key] || key;
+    let text = this.translations[key] || key;
+    if (typeof text === 'string') {
+      text = text.replace('{{year}}', new Date().getFullYear());
+    }
+    return text;
   },
 
   applyTranslations() {
