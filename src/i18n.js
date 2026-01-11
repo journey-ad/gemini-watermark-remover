@@ -9,7 +9,7 @@ const i18n = {
   },
 
   async loadTranslations(locale) {
-    const res = await fetch(`/i18n/${locale}.json?_=${Date.now()}`);
+    const res = await fetch(`./i18n/${locale}.json?_=${Date.now()}`);
     this.translations = await res.json();
     this.locale = locale;
     localStorage.setItem('locale', locale);
