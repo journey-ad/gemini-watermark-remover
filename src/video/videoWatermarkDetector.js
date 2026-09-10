@@ -1083,7 +1083,11 @@ export function selectIndependentVideoWatermarkTracks(summaries, {
 
     const qualified = summaries.filter((summary, index) => {
         if (index === 0) return true;
-        return summary.meanConfidence >= minConfidence;
+        // When every sample agrees on the primary, a zero-vote background track
+        // must not displace it through per-frame confidence normalization.
+        const primary = summaries[0];
+        const unanimousPrimary = primary.frames > 0 && primary.votes === primary.frames;
+        return summary.meanConfidence >= minConfidence && (!unanimousPrimary || summary.votes > 0);
     });
     const selected = [];
 

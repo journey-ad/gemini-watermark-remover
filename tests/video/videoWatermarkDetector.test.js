@@ -364,17 +364,20 @@ test('selectIndependentVideoWatermarkTracks should collapse overlapping catalog 
         {
             candidate: { id: 'relocated-48', x: 576, y: 1136, size: 48, evidenceGate: 'required' },
             meanConfidence: 0.3909,
-            maxConfidence: 0.9658
+            maxConfidence: 0.9658,
+            votes: 5
         },
         {
             candidate: { id: 'overlapping-inset-35', x: 583, y: 1149, size: 35, evidenceGate: 'required' },
             meanConfidence: 0.2198,
-            maxConfidence: 0.4003
+            maxConfidence: 0.4003,
+            votes: 0
         },
         {
             candidate: { id: 'animated-compact-24', x: 648, y: 1208, size: 24, evidenceGate: 'required' },
             meanConfidence: 0.5341,
-            maxConfidence: 0.9889
+            maxConfidence: 0.9889,
+            votes: 7
         }
     ];
 
@@ -383,6 +386,41 @@ test('selectIndependentVideoWatermarkTracks should collapse overlapping catalog 
     });
 
     assert.deepEqual(selected?.map((summary) => summary.candidate.id), ['relocated-48', 'animated-compact-24']);
+});
+
+test('independent tracks should reject the zero-vote background candidate from issue 150', () => {
+    const summaries = [
+        {
+            candidate: { id: 'relocated-48', x: 576, y: 1136, size: 48 },
+            meanConfidence: 0.9404598428782002,
+            frames: 12,
+            votes: 12
+        },
+        {
+            candidate: { id: 'animated-compact-24', x: 648, y: 1208, size: 24 },
+            meanConfidence: 0.18923886692970018,
+            frames: 12,
+            votes: 0
+        }
+    ];
+    assert.deepEqual(
+        videoWatermarkDetectorModule.selectIndependentVideoWatermarkTracks(summaries),
+        [summaries[0]]
+    );
+    // Preserve the primary best-effort result when sampling is inconclusive.
+    const uncertain = { ...summaries[0], meanConfidence: 0.01, votes: 0 };
+    assert.deepEqual(
+        videoWatermarkDetectorModule.selectIndependentVideoWatermarkTracks([uncertain]),
+        [uncertain]
+    );
+    // Issue 136's already-processed clip has inconsistent sampling. Keep its
+    // established alternating path; forcing one track creates fresh dark dots.
+    const mixedPrimary = { ...summaries[0], meanConfidence: 0.56466, votes: 8 };
+    const fallback = { ...summaries[1], meanConfidence: 0.2141 };
+    assert.deepEqual(
+        videoWatermarkDetectorModule.selectIndependentVideoWatermarkTracks([mixedPrimary, fallback]),
+        [mixedPrimary, fallback]
+    );
 });
 
 test('selectVideoWatermarkDetectionForFrame should choose the active fallback track', () => {
